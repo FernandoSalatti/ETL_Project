@@ -1,66 +1,53 @@
 import pandas as pd
 import os
 import glob
-import mysql.connector
+from database import create_table
 
-#cnx = mysql.connector.connect(user='root', password='root',
-#                              host='127.0.0.1',
-#                              database='etl_test')
-#cnx.close()
+# variables
+raw_path = 'src\\data\\raw'
+excel_files = glob.glob(os.path.join(raw_path, '*.xlsx'))
 
-# caminho para ler os arquivos
-folder_path = 'src\\raw'
 
-# lista todos os arquivos de excel
-excel_files = glob.glob(os.path.join(folder_path, '*.xlsx'))
+# dataframes
+
+dfs = []
 
 if not excel_files:
-    print("Nenhum arquivo compatível encontrado")
+    print("Not found any compatible file")
+
 else:
-
-    # dataframe é uma tabela na memória para guardar o conteúdo dos arquivos
-    dfs = []
-
+    dfs
     for excel_file in excel_files:
         try:
             dfTemp = pd.read_excel(excel_file)
             file_name = os.path.basename(excel_file)
-            
-            # criamos uma nova coluna chamada "location"
-            if 'brasil' in file_name.lower():
-                dfTemp['location'] = 'br'
-            elif 'france' in file_name.lower():
-                dfTemp['location'] = 'fr'
-            elif 'italian' in file_name.lower():
-                dfTemp['location'] = 'it'
 
-            # criamos uma nova coluna chamada "campanha"
+            if 'brasil' in file_name.lower():
+                dfTemp['location'] = 'brazil'.upper()
+            elif 'italian' in file_name.lower():
+                dfTemp['location'] = 'italian'.upper()        
+            elif 'france' in file_name.lower():
+                dfTemp['location'] = 'france'.upper()
+        
             dfTemp['campaign'] = dfTemp['utm_link'].str.extract(r'utm_campaign=(.*)')
 
-            # guarda os dados tratados dentro de uma dataframe comum
             dfs.append(dfTemp)
             print(dfTemp)
 
+            # Chamando a função create_table para criar a tabela no banco de dados MySQL
+            table_name = file_name.split('.')[0]  # Usando o nome do arquivo como nome da tabela
+            create_table(excel_file, table_name)  # Criar a tabela e inserir os dados no banco de dados
 
-        except Exception as e:
-            print(f"Erro ao ler o arquivo{excel_file} : {e}")
+        except Exception as read_folder:
+            print(f"Error during the file read : {file_name} - Error : {read_folder}")
 
 if dfs:
-    #concatena todas as tabelas salvas do dfs em uma unica tabela
-    result = pd.concat(dfs, ignore_index=True)
-    
-    #caminho de saida -- também é possível renomear o arquivo de saída
-    output_file = os.path.join('src', 'ready', 'AulaETL.xlsx')
+    result = pd.concat(dfs, ignore_index = True)
+    output_file = os.path.join('src','data', 'ready', 'TestETL.xlsx')
+    writer = pd.ExcelWriter(output_file, engine = 'xlsxwriter')
+    result.to_excel(writer, index=False, sheet_name='TestETL')
 
-    #configura o motor da escrita
-    writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
-
-    #leva os dados do resultado a serem escritos no motor de excel configurado
-    result.to_excel(writer, index=False, sheet_name='AulaEtl')
-
-    #salva o arquivo de excel
     writer._save()
 
 else:
-    print("nenhum dado para ser salvo")
-    
+    print("Any data to save")

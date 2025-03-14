@@ -1,6 +1,12 @@
 import pandas as pd
 import os
 import glob
+import mysql.connector
+
+#cnx = mysql.connector.connect(user='root', password='root',
+#                              host='127.0.0.1',
+#                              database='etl_test')
+#cnx.close()
 
 # caminho para ler os arquivos
 folder_path = 'src\\raw'

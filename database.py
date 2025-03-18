@@ -1,9 +1,6 @@
-
 import pandas as pd
 import os
 import mysql.connector
-
-
 
 def infer_column_type(series):
 
@@ -16,10 +13,8 @@ def infer_column_type(series):
     else:
         return 'VARCHAR(255)'
 
-def create_table(file_path:
-    str, 
-    table_name: 
-    str) -> None:
+def create_table(file_path:str, 
+                 table_name: str) -> None:
 
     cnx = mysql.connector.connect(host='localhost',
                                   user='root',
@@ -28,34 +23,37 @@ def create_table(file_path:
                                   auth_plugin='mysql_native_password')
 
     cursor = cnx.cursor()
-
     df = pd.read_excel(file_path)
 
-    df = df.replace({pd.NA:
-                    None, pd.NaT: 
-                    None, float('nan'):
-                    None})
+    df = df.replace({pd.NA:None, 
+                     pd.NaT: None, 
+                     float('nan'):None})
+
+    df.columns = [col.strip().replace(' ','').replace('-','').lower() for col in df.columns]
+
 
     columns = []
 
     for col in df.columns:
-        col_type = infer_column_type(df[col])
-        columns.append(f'`{col}`{col_type}')
 
-    create_table_query = f'CREATE TABLE IF NOT EXISTS {table_name}({','.join(columns)});'
+        col_type = infer_column_type(df[col])
+        columns.append(f'`{col}` {col_type}')
+
+    create_table_query = f'CREATE TABLE IF NOT EXISTS `{table_name}`({", ".join(columns)});'
 
     cursor.execute(create_table_query)
 
-    cnx.commit()
-
     for _, row in df.iterrows():
-        row = row.replace({pd.NA:None, pd.NaT: None, float('nan'):None})
+
+        row = row.replace({pd.NA:None, 
+                           pd.NaT: None, 
+                           float('nan'):None})
+
         placeholders = ', '.join(['%s']* len(row))
-        insert_query = f'INSERT INTO {table_name}({",".join([f"`{col}`"
-                                                             
-    for col in df.columns])}) VALUES ({placeholders})'
-        cursor.execute(insert_query,
-        tuple(row))
+
+        insert_query = f'INSERT INTO {table_name}({",".join([f"`{col}`" for col in df.columns])}) VALUES ({placeholders})'
+
+        cursor.execute(insert_query,tuple(row))
 
     cnx.commit()
 

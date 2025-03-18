@@ -29,7 +29,10 @@ else:
             elif 'france' in file_name.lower():
                 dfTemp['location'] = 'france'.upper()
         
-            dfTemp['campaign'] = dfTemp['utm_link'].str.extract(r'utm_campaign=(.*)')
+            dfTemp['campaign'] = dfTemp['utm_link'].str.extract(r'utm_campaign=(.*)')[0].str.upper()
+
+            dfTemp['Contracted Plan'] = dfTemp['Contracted Plan'].str.upper()
+            dfTemp['Customer '] = dfTemp['Customer '].str.upper()
 
             dfs.append(dfTemp)
             print(dfTemp)

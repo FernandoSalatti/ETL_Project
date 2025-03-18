@@ -34,10 +34,6 @@ else:
             dfs.append(dfTemp)
             print(dfTemp)
 
-            # Chamando a função create_table para criar a tabela no banco de dados MySQL
-            table_name = file_name.split('.')[0]  # Usando o nome do arquivo como nome da tabela
-            create_table(excel_file, table_name)  # Criar a tabela e inserir os dados no banco de dados
-
         except Exception as read_folder:
             print(f"Error during the file read : {file_name} - Error : {read_folder}")
 
@@ -48,6 +44,9 @@ if dfs:
     result.to_excel(writer, index=False, sheet_name='TestETL')
 
     writer._save()
+
+    table_name = 'teste2'
+    create_table(output_file, table_name)
 
 else:
     print("Any data to save")
